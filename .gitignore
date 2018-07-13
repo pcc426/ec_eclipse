@@ -31,6 +31,6 @@
 *.exe
 *.out
 *.app
-
+.idea/
 #Folders
 *pycache*
