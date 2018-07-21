@@ -16,6 +16,8 @@ DEFAULT_USER_ID = 1
 
 
 def _get_price_id_list(pred_df):
+    price_id_list = []
+    # if not dps_db._pred_df_is_empty(pred_df):
     df = pred_df
     price_id_list = list(zip(df['targetPrice'], df['productID']))
     # print(price_id_list)
@@ -67,22 +69,23 @@ def predict_current_price(pred_df, product_id):
     exp_file_path = predict.EXPORT_MODEL_FILE + str(product_id) + ".txt"
     saved_model_dir = predict.extract_model_dir(exp_file_path)
 
+    # if not dps_db._pred_df_is_empty(pred_df):
     for index, row in pred_df.iterrows():
-        predict_x = {
-            'Initial_Price': [row['initialPrice']],
-            'Inventory_Rate': [row['inventoryRate']],
-            'Product_Score': [row['productScore']],
-            'Shop_Score': [row['shopScore']],
-            'Active_Time_Left': [row['affectTimeLeft']],
-            'Product_Cost': [row['productCost']],
-        }
-        prediction_list = predict.predict_from_saved_model(saved_model_dir, predict_x)
-        prediction_list = predict.prune_predictions(prediction_list)
-        pred_price = prediction_list[0][0]
+                predict_x = {
+                    'Initial_Price': [row['initialPrice']],
+                    'Inventory_Rate': [row['inventoryRate']],
+                    'Product_Score': [row['productScore']],
+                    'Shop_Score': [row['shopScore']],
+                    'Active_Time_Left': [row['affectTimeLeft']],
+                    'Product_Cost': [row['productCost']],
+                }
+                prediction_list = predict.predict_from_saved_model(saved_model_dir, predict_x)
+                prediction_list = predict.prune_predictions(prediction_list)
+                pred_price = prediction_list[0][0]
 
-        max_price = row['highestPrice']
-        min_price = row['lowestPrice']
-        df.at[index, 'targetPrice'] = _prune_price(pred_price, max_price, min_price)
+                max_price = row['highestPrice']
+                min_price = row['lowestPrice']
+                df.at[index, 'targetPrice'] = _prune_price(pred_price, max_price, min_price)
 
     return pred_df
 

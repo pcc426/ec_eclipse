@@ -85,7 +85,7 @@ predict_x = {
 
 
 if __name__ == '__main__':
-    saved_model_dir = extract_model_dir(EXPORT_MODEL_FILE)
+    saved_model_dir = extract_model_dir(EXPORT_MODEL_FILE + "0000.txt")
     p = predict_from_saved_model(saved_model_dir, predict_x)
     p = prune_predictions(p)
     print("Prediction: {}".format(p))

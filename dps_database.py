@@ -36,6 +36,14 @@ def db_select_with_param(sql, param, parse_date=None):
     return df
 
 
+def _pred_df_is_empty(pred_df):
+    if pred_df.empty:
+        print("Predict dataframe {} is empty! Please check the raw data!".format(pred_df.head()))
+        return True
+    else:
+        return False
+
+
 def db_select_latest_order_ids(limit_num):
     param = {"limit_num": limit_num}
     pre_stmt = "SELECT DISTINCT `productID` FROM " \
@@ -63,42 +71,49 @@ def db_select_order_ids_by_userId(user_id):
 
 
 def db_select_pred_data_with_ids(id_tuples):
-    now = pd.Timestamp.now()
-    num_rows = len(id_tuples)
+    # print("id_tuples: {}".format(id_tuples))
+    if not id_tuples:
+        print("Id_tuples: {} is empty, please check db query.".format(id_tuples))
+        return None
+    else:
+        now = pd.Timestamp.now()
+        num_rows = len(id_tuples)
 
-    param= {"id_tuple": tuple(id_tuples)}
+        param= {"id_tuple": tuple(id_tuples)}
 
-    pre_stmt1 = "SELECT `productID`, `highestPrice`, `lowestPrice`, `effectTime`, `expireTime` " \
-                "FROM `promotion` WHERE `productID` IN %(id_tuple)s " \
-                "AND `effectTime` <= NOW() AND `expireTime` >= NOW() " \
-                "ORDER BY `productID` DESC;"
-    _time_df = db_select_with_param(pre_stmt1, param=param)
-    _time_df['effectTime'] = pd.to_datetime(_time_df['effectTime'], format='%d%b%Y:%H:%M:%S.%f')
-    _time_df['expireTime'] = pd.to_datetime(_time_df['expireTime'], format='%d%b%Y:%H:%M:%S.%f')
+        pre_stmt1 = "SELECT `productID`, `highestPrice`, `lowestPrice`, `effectTime`, `expireTime` " \
+                    "FROM `promotion` WHERE `productID` IN %(id_tuple)s " \
+                    "AND `effectTime` <= NOW() AND `expireTime` >= NOW() " \
+                    "ORDER BY `productID` DESC;"
+        _time_df = db_select_with_param(pre_stmt1, param=param)
+        _time_df['effectTime'] = pd.to_datetime(_time_df['effectTime'], format='%d%b%Y:%H:%M:%S.%f')
+        _time_df['expireTime'] = pd.to_datetime(_time_df['expireTime'], format='%d%b%Y:%H:%M:%S.%f')
 
-    pre_stmt2 = "SELECT `product`. `productID` AS 'productID', " \
-                "AVG(`product`.`initialPrice`) AS 'initialPrice', " \
-                "AVG(`order`.`inventoryRate`) AS 'inventoryRate', " \
-                "AVG(`order`.`productScore`) AS 'productScore', " \
-                "AVG(`order`.`vendorScore`) AS 'shopScore', " \
-                "AVG(`product`.`costPrice`) AS 'productCost'" \
-                "FROM `order` LEFT JOIN `product` ON `order`.`productID` = `product`.`productID` " \
-                "GROUP BY `product`. `productID` HAVING `product`.`productID` " \
-                "IN (SELECT `productID` FROM `promotion` WHERE `productID` " \
-                "IN %(id_tuple)s AND `expireTime` >= NOW() ORDER BY `productID` DESC) " \
-                "ORDER BY `product`. `productID` DESC;"
-    df = db_select_with_param(pre_stmt2, param=param)
+        pre_stmt2 = "SELECT `product`. `productID` AS 'productID', " \
+                    "AVG(`product`.`initialPrice`) AS 'initialPrice', " \
+                    "AVG(`order`.`inventoryRate`) AS 'inventoryRate', " \
+                    "AVG(`order`.`productScore`) AS 'productScore', " \
+                    "AVG(`order`.`vendorScore`) AS 'shopScore', " \
+                    "AVG(`product`.`costPrice`) AS 'productCost'" \
+                    "FROM `order` LEFT JOIN `product` ON `order`.`productID` = `product`.`productID` " \
+                    "GROUP BY `product`. `productID` HAVING `product`.`productID` " \
+                    "IN (SELECT `productID` FROM `promotion` WHERE `productID` " \
+                    "IN %(id_tuple)s AND `expireTime` >= NOW() ORDER BY `productID` DESC) " \
+                    "ORDER BY `product`. `productID` DESC;"
+        df = db_select_with_param(pre_stmt2, param=param)
 
-    _time_df['affectTimeLeft'] = _time_df.apply(lambda x: ((now - x['effectTime']) / (x['expireTime'] - x['effectTime'])), axis=1)
-    df['affectTimeLeft'] = _time_df['affectTimeLeft'].copy()
-    df['highestPrice'] = _time_df['highestPrice'].copy()
-    df['lowestPrice'] = _time_df['lowestPrice'].copy()
-    df['targetPrice'] = pd.Series(data=np.zeros((num_rows, )), index=list(range(num_rows)))
-
-    # print(_time_df)
-    # print('\n')
-    # print(df)
-    return df
+        print(_time_df)
+        print('\n')
+        print(df)
+        if _pred_df_is_empty(df) or _pred_df_is_empty(_time_df):
+            return None
+        else:
+            _time_df['affectTimeLeft'] = _time_df.apply(lambda x: ((now - x['effectTime']) / (x['expireTime'] - x['effectTime'])), axis=1)
+            df['affectTimeLeft'] = _time_df['affectTimeLeft'].copy()
+            df['highestPrice'] = _time_df['highestPrice'].copy()
+            df['lowestPrice'] = _time_df['lowestPrice'].copy()
+            df['targetPrice'] = pd.Series(data=np.zeros((num_rows, )), index=list(range(num_rows)))
+            return df
 
 
 
