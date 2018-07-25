@@ -5,16 +5,13 @@
 # @Site    : 
 # @File    : dps_database.py
 # @Software: PyCharm
-# @Desc    :
-# This is an initial logic for dps_database, some logic bug exists
-# dps_database2.py would be better
-
 
 import numpy as np
 import pandas as pd
 import MySQLdb as db
 
 MAX_CHUNK = 1000
+MAX_RATING = 5.0
 
 
 def connect_db():
@@ -51,10 +48,11 @@ def _pred_df_is_empty(pred_df):
 
 def db_select_latest_order_ids(limit_num):
     param = {"limit_num": limit_num}
-    pre_stmt = "SELECT DISTINCT `productID` FROM " \
-               "(SELECT `productID`, COUNT(`orderTime`) AS 'orderTimes' FROM `order` " \
-               "GROUP BY `productID` ORDER BY 'orderTimes' LIMIT %(limit_num)s) AS temp_t;"
 
+    pre_stmt = "SELECT A.productID FROM `order` as A," \
+               "(SELECT `productID`, max(`orderTime`) as max_time " \
+               "FROM `order` GROUP BY `productID`) as B WHERE A.productID = B.productID " \
+               "AND A.orderTime = B.max_time AND A.effectTimeLeft >= 0 ORDER BY B.max_time DESC LIMIT %(limit_num)s;"
     df = db_select_with_param(sql=pre_stmt, param=param)
 
     id_tuples = tuple(list(df['productID']))
@@ -75,51 +73,62 @@ def db_select_order_ids_by_userId(user_id):
     return id_tuples
 
 
+def _normalize_score(dataframe, col_name, max_score):
+    dataframe[col_name] = dataframe[col_name].apply(pd.to_numeric)
+    dataframe[col_name] = dataframe.apply(
+        lambda x: x[col_name] / max_score, axis=1)
+    return dataframe
+
+
 def db_select_pred_data_with_ids(id_tuples):
-    # print("id_tuples: {}".format(id_tuples))
+    print("id_tuples: {}".format(id_tuples))
     if not id_tuples:
         print("Id_tuples: {} is empty, please check db query.".format(id_tuples))
         return None
     else:
-        now = pd.Timestamp.now()
         num_rows = len(id_tuples)
 
         param= {"id_tuple": tuple(id_tuples)}
 
-        pre_stmt1 = "SELECT `productID`, `highestPrice`, `lowestPrice`, `effectTime`, `expireTime` " \
+        pre_stmt1 = "SELECT `productID`, `highestPrice`, `lowestPrice` " \
                     "FROM `promotion` WHERE `productID` IN %(id_tuple)s " \
-                    "AND `effectTime` <= NOW() AND `expireTime` >= NOW() " \
                     "ORDER BY `productID` DESC;"
         _time_df = db_select_with_param(pre_stmt1, param=param)
-        _time_df['effectTime'] = pd.to_datetime(_time_df['effectTime'], format='%d%b%Y:%H:%M:%S.%f')
-        _time_df['expireTime'] = pd.to_datetime(_time_df['expireTime'], format='%d%b%Y:%H:%M:%S.%f')
 
-        pre_stmt2 = "SELECT `product`. `productID` AS 'productID', " \
-                    "AVG(`product`.`initialPrice`) AS 'initialPrice', " \
-                    "AVG(`order`.`inventoryRate`) AS 'inventoryRate', " \
-                    "AVG(`order`.`productScore`) AS 'productScore', " \
-                    "AVG(`order`.`vendorScore`) AS 'shopScore', " \
-                    "AVG(`product`.`costPrice`) AS 'productCost'" \
-                    "FROM `order` LEFT JOIN `product` ON `order`.`productID` = `product`.`productID` " \
-                    "GROUP BY `product`. `productID` HAVING `product`.`productID` " \
-                    "IN (SELECT `productID` FROM `promotion` WHERE `productID` " \
-                    "IN %(id_tuple)s AND `expireTime` >= NOW() ORDER BY `productID` DESC) " \
-                    "ORDER BY `product`. `productID` DESC;"
-        df = db_select_with_param(pre_stmt2, param=param)
+        pre_stmt2 = "SELECT `productID`, `initialPrice`, `costPrice` AS productCost FROM `product` " \
+                    "WHERE `productID` IN %(id_tuple)s;"
+        _product_df = db_select_with_param(pre_stmt2, param=param)
+
+        pre_stmt3 = "SELECT A.`productID`, A.`inventoryRate`, A.`productScore`, A.`vendorScore` AS shopScore, " \
+                    "A.`effectTimeLeft` AS affectTimeLeft FROM `order` as A," \
+                    "(SELECT `productID`, max(`orderTime`) as max_time FROM `order` GROUP BY `productID`) as B " \
+                    "WHERE A.productID = B.productID AND A.orderTime = B.max_time " \
+                    "AND A.effectTimeLeft >=0 " \
+                    "AND A.productID IN %(id_tuple)s" \
+                    "ORDER BY B.max_time DESC;"
+
+        # df = db_select_with_param(pre_stmt2, param=param)
+        _order_df = db_select_with_param(pre_stmt3, param=param)
+
+        df = pd.merge(_product_df, _order_df, how="left", on="productID")
+        df = pd.merge(df, _time_df, how="left", on="productID")
 
         # print(_time_df)
         # print('\n')
         # print(df)
-        if _pred_df_is_empty(df) or _pred_df_is_empty(_time_df):
+        if _pred_df_is_empty(_order_df) or _pred_df_is_empty(_product_df):
             return None
         else:
-            _time_df['affectTimeLeft'] = _time_df.apply(lambda x: ((now - x['effectTime']) / (x['expireTime'] - x['effectTime'])), axis=1)
-            df['affectTimeLeft'] = _time_df['affectTimeLeft'].copy()
-            df['highestPrice'] = _time_df['highestPrice'].copy()
-            df['lowestPrice'] = _time_df['lowestPrice'].copy()
-            df['targetPrice'] = pd.Series(data=np.zeros((num_rows, )), index=list(range(num_rows)))
+            df = _normalize_score(df, 'shopScore', MAX_RATING)
+            df = _normalize_score(df, 'productScore', MAX_RATING)
+
+            df['targetPrice'] = pd.Series(data=np.zeros((num_rows,)), index=list(range(num_rows)))
             return df
 
+
+t = db_select_latest_order_ids(MAX_CHUNK)
+df = db_select_pred_data_with_ids(t)
+print(df)
 
 
 

@@ -6,13 +6,15 @@ import numpy as np
 import pandas as pd
 import MySQLdb as db
 import argparse
-import sys
+import sys, os
 
 
 import tf_predict as predict
-import dps_database as dps_db
+import dps_database2 as dps_db
 
 DEFAULT_USER_ID = 1
+
+pat_path = os.path.abspath("/Users/pcc/ec_eclipse")
 
 
 def _get_price_id_list(pred_df):
@@ -67,6 +69,7 @@ def _convert_df_row_to_list_dict(row):
 
 def predict_current_price(pred_df, product_id):
     exp_file_path = predict.EXPORT_MODEL_FILE + str(product_id) + ".txt"
+    print("exp_file_path: {}".format(exp_file_path))
     saved_model_dir = predict.extract_model_dir(exp_file_path)
 
     # if not dps_db._pred_df_is_empty(pred_df):
@@ -105,23 +108,27 @@ if __name__ == '__main__':
     parser.add_argument('--product_id', default="0000", type=str, help='product id')
     args = parser.parse_args(sys.argv[1:])
 
-    # Only update prices for latest trading products!
-    ids_tuple = dps_db.db_select_latest_order_ids(limit_num=dps_db.MAX_CHUNK)
-    # ids_tuple = dps_db.db_select_order_ids_by_userId(DEFAULT_USER_ID)
-    # Select predict_x features according to retrieved ids
-    df = dps_db.db_select_pred_data_with_ids(id_tuples=ids_tuple)
-    # Predict new current prices
-    # df = predict_current_price(pred_df=df, product_id=str(args.product_id))
-    df = predict_current_price(pred_df=df, product_id=str(args.product_id))
-    print(df)
-    pl = _get_price_id_list(pred_df=df)
-    # Update currentPrice in database
-    return_num = db_update_current_price_by_id(pl)
+    try:
+        # Only update prices for latest trading products!
+        ids_tuple = dps_db.db_select_latest_order_ids(limit_num=dps_db.MAX_CHUNK)
+        # ids_tuple = dps_db.db_select_order_ids_by_userId(DEFAULT_USER_ID)
+        # Select predict_x features according to retrieved ids
+        df = dps_db.db_select_pred_data_with_ids(id_tuples=ids_tuple)
+        # Predict new current prices
+        # df = predict_current_price(pred_df=df, product_id=str(args.product_id))
+        df = predict_current_price(pred_df=df, product_id=str(args.product_id))
+        print(df)
+        pl = _get_price_id_list(pred_df=df)
+        # Update currentPrice in database
+        return_num = db_update_current_price_by_id(pl)
+        if return_num == 0:
+            print("Ops! Something goes wrong! Update price fails!")
+        else:
+            print("Yeah! Current prices have been updated!")
 
-    if return_num == 0:
-        print("Ops! Something goes wrong! Update price fails!")
-    else:
-        print("Yeah! Current prices have been updated!")
+    except Exception as e:
+        print("ExecErrors: {}".format(e))
+
 
 
 

@@ -8,13 +8,13 @@
 
 import tensorflow as tf
 
-import dps_data
 import tf_build_model
+import os
 
 EXPORT_MODEL_FILE = tf_build_model.EXPORT_MODEL_FILE
 MAX_PRICE = 1000.
 MIN_PRICE = 0.
-
+pat_path = os.path.abspath("/Users/pcc/ec_eclipse")
 
 
 def predict_from_saved_model(saved_model_dir, predict_x):
@@ -49,7 +49,7 @@ def predict_from_saved_model(saved_model_dir, predict_x):
 def extract_model_dir(file_path):
     with open(file_path, 'r+') as f:
         file_name = f.readline()
-        file_name = file_name[2:-1]
+        file_name = pat_path + file_name[3:-1]
 
     return file_name
 

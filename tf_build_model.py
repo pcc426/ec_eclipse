@@ -14,19 +14,22 @@ from __future__ import print_function
 import argparse
 import tensorflow as tf
 import itertools
+import os
 
 import dps_data
-
 
 # parser = argparse.ArgumentParser()
 # parser.add_argument('--batch_size', default=128, type=int, help='batch size')
 # parser.add_argument('--train_steps', default=1500, type=int,
 #                     help='number of training steps')
 
+# abs_path = os.path.abspath(".")
+pat_path = os.path.abspath("/Users/pcc/ec_eclipse")
+
 DEFAULT_BATCH_SIZE = 128
-DEFAULT_TRAIN_STEPS = 1500
-EXPORT_MODEL_FILE = './export_files/export_file_'
-EXPORT_MODEL_DIR = './pcc_models/exported_'
+DEFAULT_TRAIN_STEPS = 5000
+EXPORT_MODEL_FILE = pat_path + '/export_files/export_file_'
+EXPORT_MODEL_DIR = pat_path + '/pcc_models/exported_'
 
 
 def train_and_save_model(batch_size=DEFAULT_BATCH_SIZE, train_steps=DEFAULT_TRAIN_STEPS,
@@ -66,12 +69,12 @@ def train_and_save_model(batch_size=DEFAULT_BATCH_SIZE, train_steps=DEFAULT_TRAI
 
     # Train the Model.
     model.train(
-        input_fn=lambda:dps_data.train_input_fn(train_x, train_y, batch_size=batch_size),
+        input_fn=lambda: dps_data.train_input_fn(train_x, train_y, batch_size=batch_size),
         steps=train_steps)
 
     # Evaluate the model.
     eval_result = model.evaluate(
-        input_fn=lambda:dps_data.eval_input_fn(test_x, test_y, batch_size=batch_size))
+        input_fn=lambda: dps_data.eval_input_fn(test_x, test_y, batch_size=batch_size))
 
     # Mean Squared Error (MSE).
     average_loss = eval_result["average_loss"]
@@ -106,7 +109,7 @@ def train_and_save_model(batch_size=DEFAULT_BATCH_SIZE, train_steps=DEFAULT_TRAI
     }
 
     predictions = model.predict(
-        input_fn=lambda:dps_data.eval_input_fn(predict_x, labels=None, batch_size=batch_size))
+        input_fn=lambda: dps_data.eval_input_fn(predict_x, labels=None, batch_size=batch_size))
 
     for pred, expec in zip(predictions, expected):
         print("\n prediction: {}, expected: {}".format(pred['predictions'], expec))
