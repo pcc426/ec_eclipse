@@ -8,7 +8,7 @@ import datetime
 
 
 # generate data for a particular date
-def gen_data_frame_for_date(date, total_pay, average_pay, shop_score_mean=0.6, gross_margin=0.2):
+def gen_data_frame_for_date(date, total_pay, average_pay, shop_score_mean=0.8, gross_margin=0.2):
     StdInitialPrice = 5.
     StdInitialShopScore = 0.5
 

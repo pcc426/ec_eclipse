@@ -32,5 +32,9 @@
 *.out
 *.app
 .idea/
+*.csv
+
 #Folders
 *pycache*
+data/
+*models/

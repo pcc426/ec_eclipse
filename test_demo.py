@@ -8,13 +8,14 @@
 
 
 import pandas as pd
-inp = [{'c1':10, 'c2':100}, {'c1':11,'c2':110}, {'c1':12,'c2':120}]
-df = pd.DataFrame(inp)
-print(df)
+
+df = pd.read_csv("./data/gen_data_2018-07-25_v1.csv")
+# tmp = df.sum(axis=0)
+tmp = df["Total_Pay"].count()
 
 # for index, row in df.iterrows():
 #     # print(row['c1'].tolist())
 #     print(list(row['c1'].tolist()))
 
-t = tuple(list(df['c1']))
-print(t)
+# t = tuple(list(df['c1']))
+print(tmp)

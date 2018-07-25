@@ -9,8 +9,8 @@
 import pandas as pd
 import tensorflow as tf
 
-TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
-TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
+# TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
+# TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
 
 TRAIN_PATH = './pcc_data/csv_result-gen_data_2018-06-19_target price_train.csv'
 TEST_PATH = './pcc_data/csv_result-gen_data_2018-06-19_target price_test.csv'
@@ -21,11 +21,11 @@ CSV_COLUMN_NAMES = ['Initial_Price', 'Inventory_Rate',
                     'Product_Score', 'Shop_Score', 'Active_Time_Left',
                     'Product_Cost', 'Target_Price']
 
-def maybe_download():
-    train_path = tf.keras.utils.get_file(TRAIN_URL.split('/')[-1], TRAIN_URL)
-    test_path = tf.keras.utils.get_file(TEST_URL.split('/')[-1], TEST_URL)
-
-    return train_path, test_path
+# def maybe_download():
+#     # train_path = tf.keras.utils.get_file(TRAIN_URL.split('/')[-1], TRAIN_URL)
+#     # test_path = tf.keras.utils.get_file(TEST_URL.split('/')[-1], TEST_URL)
+#
+#     return train_path, test_path
 
 
 def load_data(y_name='Target_Price'):
