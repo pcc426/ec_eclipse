@@ -29,7 +29,7 @@ pat_path = os.path.abspath("/Users/pcc/ec_eclipse")
 DEFAULT_BATCH_SIZE = 128
 DEFAULT_TRAIN_STEPS = 5000
 EXPORT_MODEL_FILE = pat_path + '/export_files/export_file_'
-EXPORT_MODEL_DIR = pat_path + '/pcc_models/exported_'
+EXPORT_MODEL_DIR = pat_path + '/expected_models/exported_'
 
 
 def train_and_save_model(batch_size=DEFAULT_BATCH_SIZE, train_steps=DEFAULT_TRAIN_STEPS,
@@ -63,7 +63,7 @@ def train_and_save_model(batch_size=DEFAULT_BATCH_SIZE, train_steps=DEFAULT_TRAI
             learning_rate=0.1,
             l1_regularization_strength=0.001
         ),
-        # model_dir='pcc_models/demo1',
+        # model_dir='expected_models/demo1',
         # config=my_checkpointing_config
     )
 

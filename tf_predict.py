@@ -49,7 +49,7 @@ def predict_from_saved_model(saved_model_dir, predict_x):
 def extract_model_dir(file_path):
     with open(file_path, 'r+') as f:
         file_name = f.readline()
-        file_name = pat_path + file_name[3:-1]
+        file_name = file_name[2:-1]
 
     return file_name
 

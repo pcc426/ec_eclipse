@@ -12,9 +12,9 @@ import tensorflow as tf
 # TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
 # TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
 
-TRAIN_PATH = './pcc_data/csv_result-gen_data_2018-06-19_target price_train.csv'
-TEST_PATH = './pcc_data/csv_result-gen_data_2018-06-19_target price_test.csv'
-ALL_PATH = './pcc_data/csv_result-gen_data_2018-06-19_target price_clean.csv'
+TRAIN_PATH = './train_data/csv_result-gen_data_2018-06-19_target price_train.csv'
+TEST_PATH = './train_data/csv_result-gen_data_2018-06-19_target price_test.csv'
+ALL_PATH = './train_data/csv_result-gen_data_2018-06-19_target price_clean.csv'
 
 
 CSV_COLUMN_NAMES = ['Initial_Price', 'Inventory_Rate',

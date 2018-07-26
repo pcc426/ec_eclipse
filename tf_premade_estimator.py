@@ -58,7 +58,7 @@ def main(argv):
             learning_rate=0.1,
             l1_regularization_strength=0.001
         ),
-        # model_dir='pcc_models/demo1',
+        # model_dir='expected_models/demo1',
         # config=my_checkpointing_config
     )
 
@@ -128,10 +128,10 @@ def main(argv):
         return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
 
     # default serving_input_receiver
-    model.export_savedmodel("pcc_models/exported_1", serving_input_receiver_fn, strip_default_attrs=True)
+    model.export_savedmodel("expected_models/exported_1", serving_input_receiver_fn, strip_default_attrs=True)
 
     # raw serving_input_receiver_fn
-    # model.export_savedmodel("/pcc_models/exported_1",
+    # model.export_savedmodel("/expected_models/exported_1",
     #                         tf.estimator.export.build_raw_serving_input_receiver_fn(
     #                             features=feature_spec, default_batch_size=None),
     #                         strip_default_attrs=True)

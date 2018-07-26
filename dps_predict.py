@@ -71,6 +71,7 @@ def predict_current_price(pred_df, product_id):
     exp_file_path = predict.EXPORT_MODEL_FILE + str(product_id) + ".txt"
     print("exp_file_path: {}".format(exp_file_path))
     saved_model_dir = predict.extract_model_dir(exp_file_path)
+    print("exp_model_path: {}".format(saved_model_dir))
 
     # if not dps_db._pred_df_is_empty(pred_df):
     for index, row in pred_df.iterrows():
